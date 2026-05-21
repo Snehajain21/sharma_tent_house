@@ -305,5 +305,5 @@ The files will connect using IDs like customer_id, booking_id, and item_id.
 One thing I still need to understand properly is how to manage item availability when many bookings overlap together during wedding season and some customers return items late.  
 
 For example, if 200 chairs are booked for one wedding and another customer asks for chairs on nearby dates, the system should correctly calculate how many chairs are actually free at that time.  
-
+ system prooject
 
