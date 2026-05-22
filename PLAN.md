@@ -2,22 +2,16 @@
 
 # 1. Three-Sentence Specification
 
-THE program  I bulit will help Rakesh ji Owner of Sharma Tent House manage all bookings, rental items, customer details, payments, deliveries, returns, and damaged items from one computer system instead of maintaining everything in a handwritten ledger.  
+The program I am building will help Sharma Tent House manage bookings, customers, rental items, payments, deliveries, returns, and damaged items using one computer system instead of handwritten records.  
 
-the user of this system will be Rakesh ji and Ankit because both of them run tent house . they need only single computer program  
+The main users of this system will be Rakesh ji and Ankit because both of them manage bookings and inventory, but Rakesh ji may focus more on payments and customer handling while Ankit may focus more on delivery and item management.  
 
-at the end of this project the system can do following things:-
-correctly save all booking
-stop overbooking mistakes
-track avaliable item
-calculate payments and damages properly
-keep all information stored permanently 
+ project will be considered complete if the system can correctly store bookings, prevent basic overbooking mistakes, track item movement, and keep all business records saved properly.
+
 
 # 2. The Information Your Program Must Remember
 
 After carefully reading the full story, I understood that Sharma Tent House does not only rent chairs and tables. The business actually manages :- customers, event schedules, booking overlap, delivery timing, damaged items, deposits, missing items, and payment tracking together. Because of this, I divided the information into different groups instead of storing everything in one place.
-
----
 
 ## A. Customer Information
 
@@ -46,28 +40,30 @@ This section stores all rental items available in the tent house.
 
 1. item_id - string , Required 
 2. item_name - string , Required 
-3. category - string , Required 
-4. item_type - string , Required 
-5. total_quantity - integer ,Required 
-7. rental_price_per_day - float , Required 
-8. damage_charge - float , Optional 
-9. late_fee_per_day - float , Required
-10. item_condition - string , Required
+3. category - string , Required  
+4. tracking_type - string , Required  
+5. total_quantity - integer , Required  
+6. rental_price_per_day - float , Required  
+7. damage_charge - float , Optional  
+8. late_fee_per_day - float , Required  
+9. item_condition - string , Required
+
+I separated category and tracking_type because both solve different problems in the system.  
+
+Category tells what kind of item it is from a business perspective, like seating, lighting, decoration, cooking equipment, or sound systems.  
+
+Tracking type tells how the system should manage booking rules and availability for that item.  
 
 For example:
-- Chairs are bulk items because only quantity matters.
-- LED walls are unique items because exact unit tracking matters.
-- Gas burners are limited-count items because only a few are available.
+- Plastic chairs may use bulk_quantity tracking because only total quantity matters.
+- LED walls or VIP sofa sets may use unique_item tracking because the same exact unit cannot be booked for two functions on the same date.
+- Gas burners or coolers may use limited_count tracking because only a few units exist and overlapping bookings must be checked carefully.
 
-If one LED wall is already booked for a function in Mahaveer Nagar, the same LED wall cannot be booked again for another event on the same date.
+I first thought of storing available_quantity directly inside the item information, but after thinking more carefully, I realized availability changes depending on booking dates and overlapping bookings.  
 
-####
-I first thought of storing available_quantity directly inside the item information, but after thinking more carefully, I realized availability changes depending on booking dates.  
+For example, Sharma Tent House may have 500 total chairs, but only 200 may be free on a particular wedding date because other bookings may already reserve the remaining stock for overlapping days.  
 
-For example, 500 chairs may exist in total, but only 200 may be free on a particular wedding date because other bookings may already overlap on that day.  
-
-Because of this, I think availability should be calculated dynamically using booking dates instead of storing a fixed available_quantity value permanently inside the item record.
-####
+Because of this, I think availability should be calculated dynamically by checking active bookings for the requested dates instead of storing a fixed available_quantity value permanently inside the item record.
 ---
 
 ## C. Booking Information
@@ -79,19 +75,32 @@ This section stores complete event booking details.
 2. customer_id  - string , Required 
 3. event_name - string , Required 
 4. event_location - string , Required 
-5. booking_start_date - date , Required 
-6. booking_end_date - date , Required 
-7. booking_status - string , Required 
-8. deposit_amount - float , Required 
-9. total_amount - float , Required 
-10. amount_paid - float , Required 
-11. remaining_balance - float , Required 
+5. event_date - date , Required  
+6. item_dispatch_date - date , Required  
+7. expected_return_date - date , Required
+8. booking_status - string , Required 
+9. deposit_amount - float , Required 
+10. total_amount - float , Required 
+11. amount_paid - float , Required 
+12. remaining_balance - float , Required 
+13. damage_deduction_amount - float , Optional  
+14. missing_item_deduction_amount - float , Optional  
+15. refund_amount - float , Optional  
+16. extra_amount_due - float , Optional  
+17. final_payment_status - string , Optional
+
+I first thought booking dates and event dates were the same thing, but after thinking about real tent house operations, I realized items usually leave the shop before the actual function and return after the event ends.  
+
+Because of this, availability checking should use the full item movement period instead of only the wedding or event date.  
+
+For example, if a wedding happens on 18th November, chairs may leave the shop on 17th November and return on 20th November, so those chairs should not appear available during that entire period.
 
 
-- Booking dates are necessary because multiple events happen together during wedding season.
-- Deposit amount is important because damages and missing items are adjusted from it.
-- Booking status helps manage cancelled, completed, or active bookings.
+I realized the booking payment process is not only about taking advance payment and final payment. After the event finishes, the system also needs to handle deposit deductions for damaged or missing items and decide whether money should be refunded to the customer or additional payment is still pending.  
 
+For example, if the remaining deposit amount is still positive after all deductions, the system should calculate a refund amount for the customer. If deductions become greater than the deposit amount, the system should store the extra amount still owed by the customer.  
+
+The final_payment_status field will help the system identify whether the booking is fully settled, refund pending, or payment still due.
 
 ## D. Booking Item Information
 
@@ -103,9 +112,17 @@ This section stores item-wise details connected to bookings.
 4. quantity_booked - integer , Required 
 5. price_per_day - float , Required 
 6. total_item_cost - float , Required 
+7. quantity_returned - integer , Optional  
+8. damaged_quantity - integer , Optional  
+9. missing_quantity - integer , Optional  
+10. item_return_status - string , Optional
 
 ### Why I separated this section:
 One booking contains many different rental items, so storing all items inside the main booking record may become complex so i save items of each booking separately
+
+I also moved return and damage tracking closer to booking items because one booking can contain many different items, and different items may return in different conditions.  
+
+For example, all chairs may return safely while some tables may return damaged or some coolers may still be missing.
 
 ### Example:
 Booking B301 may contain:
@@ -124,13 +141,10 @@ This section stores all information related to item delivery, item returns, miss
 4. expected_return_date , date , Required 
 5. actual_return_date - date , Required 
 6. delivery_status - string , Required 
-7. returned_quantity - integer , Required 
-8. missing_quantity - integer , Required 
-9. damaged_quantity - integer , Required 
-10. damage_description - string , Required 
-11. late_return_days - integer , Required 
-12. deduction_amount - float , Optional 
-13. return_notes - string , Optional 
+7. damage_description - string , Required 
+8. late_return_days - integer , Required 
+9. deduction_amount - float , Optional 
+10. return_notes - string , Optional 
 
 ### Example:
 For one wedding booking:
@@ -164,7 +178,7 @@ item<-> return items,damage items,missing items
 Customer details are connected with bookings
 customer details<-> booking records
 
-All these sections work together. If even one section is disconnected, the system may may cuases errors
+All these sections work together. If even one section is disconnected, the system may create booking mistakes, stock calculation errors, or payment confusion.
 
 # 4. File Structure
 
@@ -266,9 +280,10 @@ The files will connect using IDs like customer_id, booking_id, and item_id.
 
 ---
 
-##  Things That Can Go Wrong
+# 6.  Things That Can Go Wrong
 
-1. JSON file does not exist when the program starts 
+1. JSON file does not exist when the program starts → system automatically creates empty JSON files for first-time setup.
+
 
 2. User enters negative quantity while booking → system rejects invalid input and asks again.  
 
@@ -276,7 +291,7 @@ The files will connect using IDs like customer_id, booking_id, and item_id.
 
 4. Same LED wall gets booked for two functions on the same date → system prevents double booking.  
 
-5. User enters invalid date format → system shows correct date format example.  
+5. User enters invalid date format → system rejects the input and shows the correct date format example. 
 
 6. User tries to return more items than originally booked → system rejects return entry.  
 
@@ -288,22 +303,22 @@ The files will connect using IDs like customer_id, booking_id, and item_id.
 
 10. Booking is modified after items are already delivered → system asks for confirmation before updating records.  
 
-11. Customer returns items late after function → system automatically adds late return charges.  
+11. Customer returns items late after the function → system calculates late return charges automatically and updates the remaining balance..  
 
 12. User tries deleting inventory item connected with active bookings → system blocks deletion request.  
 
 
-14. User searches booking that does not exist → system shows “Booking Not Found” message.  
+13. User searches booking that does not exist → system shows “Booking Not Found” message.  
 
-15. Customer cancels function after items already left the shop → system keeps cancellation pending for manual approval.  
+14. Customer cancels function after items already left the shop → system keeps cancellation pending for manual approval.  
 
-16. User enters text instead of numeric quantity → system rejects invalid input and asks again.  
+15. User enters text instead of numeric quantity → system rejects invalid input and asks again.  
 
-17. Multiple wedding bookings happen on the same day → system carefully checks stock before confirming new booking.  
+16. Multiple wedding bookings happen on the same day → system carefully checks stock before confirming new booking.  
 
-18. Some items return damaged and some missing together → system calculates both damage charges and missing charges separately.  
+17. Some items return damaged and some missing together → system calculates both damage charges and missing charges separately.  
 
-19. Customer argues that deposit amount was different → system shows stored payment history and booking records.  
+18. Customer argues that deposit amount was different → system shows stored payment history and booking records.  
 
 
 # 7. One Thing I Don’t Know Yet
@@ -312,4 +327,11 @@ One thing I still need to understand properly is how to manage item availability
 
 For example, if 200 chairs are booked for one wedding and another customer asks for chairs on nearby dates, the system should correctly calculate how many chairs are actually free at that time.  
 
+To understand this better, I started thinking about real overlapping booking situations manually before designing the final logic.  
+
+For example, if Sharma Tent House has 500 chairs in total and four different bookings already reserve chairs across overlapping dates, the system should calculate the total reserved quantity for each specific day before confirming a new booking.  
+
+If 450 chairs are already reserved on 12th November across multiple active bookings, the system should understand that only 50 chairs are still free on that date even if total stock is 500.  
+
+I think solving these examples manually first will help me design better availability checking logic and booking data structures before starting implementation.
 
