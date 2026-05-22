@@ -49,7 +49,6 @@ This section stores all rental items available in the tent house.
 3. category - string , Required 
 4. item_type - string , Required 
 5. total_quantity - integer ,Required 
-6. available_quantity - integer , Required 
 7. rental_price_per_day - float , Required 
 8. damage_charge - float , Optional 
 9. late_fee_per_day - float , Required
@@ -62,6 +61,13 @@ For example:
 
 If one LED wall is already booked for a function in Mahaveer Nagar, the same LED wall cannot be booked again for another event on the same date.
 
+####
+I first thought of storing available_quantity directly inside the item information, but after thinking more carefully, I realized availability changes depending on booking dates.  
+
+For example, 500 chairs may exist in total, but only 200 may be free on a particular wedding date because other bookings may already overlap on that day.  
+
+Because of this, I think availability should be calculated dynamically using booking dates instead of storing a fixed available_quantity value permanently inside the item record.
+####
 ---
 
 ## C. Booking Information
