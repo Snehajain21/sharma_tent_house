@@ -82,12 +82,11 @@ This section stores complete event booking details.
 9. deposit_amount - float , Required 
 10. total_amount - float , Required 
 11. amount_paid - float , Required 
-12. remaining_balance - float , Required 
-13. damage_deduction_amount - float , Optional  
-14. missing_item_deduction_amount - float , Optional  
-15. refund_amount - float , Optional  
-16. extra_amount_due - float , Optional  
-17. final_payment_status - string , Optional
+12. remaining_balance - float , Required  
+13. missing_item_deduction_amount - float , Optional  
+14. refund_amount - float , Optional  
+15. extra_amount_due - float , Optional  
+16. final_payment_status - string , Optional
 
 I first thought booking dates and event dates were the same thing, but after thinking about real tent house operations, I realized items usually leave the shop before the actual function and return after the event ends.  
 
@@ -111,11 +110,13 @@ This section stores item-wise details connected to bookings.
 3. item_id - string , Required 
 4. quantity_booked - integer , Required 
 5. price_per_day - float , Required 
-6. total_item_cost - float , Required 
-7. quantity_returned - integer , Optional  
-8. damaged_quantity - integer , Optional  
-9. missing_quantity - integer , Optional  
-10. item_return_status - string , Optional
+6. discount_percentage - float , Optional  
+7. final_price_per_day - float , Required  
+8. total_item_cost - float , Required 
+9. quantity_returned - integer , Optional  
+10. damaged_quantity - integer , Optional  
+11. missing_quantity - integer , Optional  
+12. item_return_status - string , Optional
 
 ### Why I separated this section:
 One booking contains many different rental items, so storing all items inside the main booking record may become complex so i save items of each booking separately
@@ -123,6 +124,14 @@ One booking contains many different rental items, so storing all items inside th
 I also moved return and damage tracking closer to booking items because one booking can contain many different items, and different items may return in different conditions.  
 
 For example, all chairs may return safely while some tables may return damaged or some coolers may still be missing.
+
+I realized damage information should not be stored separately in multiple places because that may create inconsistent records if one section gets updated and another does not.  
+
+Because of this, item-wise damaged quantities are treated as the main damage record, while damage descriptions are only used for additional notes and explanations.
+
+I realized item pricing may not always stay fixed because Rakesh ji sometimes gives discounts to regular customers or family connections.  
+
+Because of this, the system should store both the original item price and the final negotiated item price used in that booking. This will help the program correctly calculate booking totals while still keeping a record of discounts.
 
 ### Example:
 Booking B301 may contain:
@@ -133,26 +142,52 @@ Booking B301 may contain:
 
 ## E. Delivery, Return, and Damage Information
 
-This section stores all information related to item delivery, item returns, missing items, damaged items
+This section stores all information related to item delivery, return events, damaged items, missing items, and late returns.
 
-1. record_id - string , Required 
-2. booking_id - string , Required 
-3. delivery_date - date , Required 
-4. expected_return_date , date , Required 
-5. actual_return_date - date , Required 
-6. delivery_status - string , Required 
-7. damage_description - string , Required 
-8. late_return_days - integer , Required 
-9. deduction_amount - float , Optional 
-10. return_notes - string , Optional 
+I first thought one booking would have only one final return date, but after thinking about real tent house operations, I realized items may return in multiple parts on different days.  
+
+For example, most chairs may return on time while a few remaining chairs may return two days later. Because of this, the system should support multiple return events instead of storing only one final return record for the whole booking.
+
+1. record_id - string , Required  
+2. booking_id - string , Required  
+3. delivery_date - date , Required  
+4. return_event_date - date , Required  
+5. returned_item_id - string , Required  
+6. returned_quantity - integer , Required  
+7. return_status - string , Required  
+8. late_return_days - integer , Optional  
+9. delivery_status - string , Required  
+10. damage_description - string , Required  
+11. deduction_amount - float , Optional  
+12. return_notes - string , Optional  
 
 ### Example:
 For one wedding booking:
 - 200 chairs were delivered
-- only 198 chairs returned
-- 2 chairs were damaged
-- return happened 1 day late
+- 198 chairs returned on 20th November
+- remaining 2 chairs returned on 22nd November
+- 2 chairs were damaged during the event
+- system calculated separate late return days for the delayed items
 
+## F. Payment Information
+
+This section stores all payment transactions connected to bookings because customers may pay in multiple parts during different stages of the event process.
+
+1. payment_id - string , Required  
+2. booking_id - string , Required  
+3. payment_date - date , Required  
+4. payment_amount - float , Required  
+5. payment_method - string , Required  
+6. payment_type - string , Required  
+7. payment_notes - string , Optional
+
+### Example:
+One booking payment history may contain:
+- ₹10,000 advance payment on booking date
+- ₹20,000 payment during item delivery
+- ₹15,000 final payment after event completion
+
+Because of this, the system should store each payment separately instead of only maintaining one total paid amount.
 # 3. How Your Groupings Connect To Each Other
 
 All sections in this system are connected  
@@ -334,4 +369,10 @@ For example, if Sharma Tent House has 500 chairs in total and four different boo
 If 450 chairs are already reserved on 12th November across multiple active bookings, the system should understand that only 50 chairs are still free on that date even if total stock is 500.  
 
 I think solving these examples manually first will help me design better availability checking logic and booking data structures before starting implementation.
+
+I also realized I should test the availability logic using small manual examples before implementation.  
+
+For example, if total chair quantity is 500 and existing bookings already reserve 200 chairs, 150 chairs, and 100 chairs on the same date, then the availability checking logic should return only 50 available chairs for that date.  
+
+To verify the logic later in code, I would give the function the booking dates, reserved quantities, and total stock quantity as input, and then check whether the function correctly calculates the remaining available quantity.
 
