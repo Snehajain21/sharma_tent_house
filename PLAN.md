@@ -38,15 +38,15 @@ Agarwal family from Talwandi may already have booked items many times before, so
 
 This section stores all rental items available in the tent house.
 
-1. item_id - string , Required 
-2. item_name - string , Required 
+1. item_id - string , Required  
+2. item_name - string , Required  
 3. category - string , Required  
 4. tracking_type - string , Required  
 5. total_quantity - integer , Required  
 6. rental_price_per_day - float , Required  
 7. damage_charge - float , Optional  
 8. late_fee_per_day - float , Required  
-9. item_condition - string , Required
+9. item_condition - string , Required  
 
 I separated category and tracking_type because both solve different problems in the system.  
 
@@ -59,11 +59,19 @@ For example:
 - LED walls or VIP sofa sets may use unique_item tracking because the same exact unit cannot be booked for two functions on the same date.
 - Gas burners or coolers may use limited_count tracking because only a few units exist and overlapping bookings must be checked carefully.
 
+I also realized some unique items may need separate unit-level tracking instead of only quantity tracking.  
+
+For example, Sharma Tent House may own two different LED walls. If LED Wall A is already booked for one event, LED Wall B may still remain available for another booking on the same date.  
+
+Because of this, unique_item tracking may require a separate item_unit_id so the system can identify exactly which physical unit is booked, delivered, or returned.
+
 I first thought of storing available_quantity directly inside the item information, but after thinking more carefully, I realized availability changes depending on booking dates and overlapping bookings.  
 
 For example, Sharma Tent House may have 500 total chairs, but only 200 may be free on a particular wedding date because other bookings may already reserve the remaining stock for overlapping days.  
 
 Because of this, I think availability should be calculated dynamically by checking active bookings for the requested dates instead of storing a fixed available_quantity value permanently inside the item record.
+
+
 ---
 
 ## C. Booking Information
@@ -81,12 +89,10 @@ This section stores complete event booking details.
 8. booking_status - string , Required 
 9. deposit_amount - float , Required 
 10. total_amount - float , Required 
-11. amount_paid - float , Required 
-12. remaining_balance - float , Required  
-13. missing_item_deduction_amount - float , Optional  
-14. refund_amount - float , Optional  
-15. extra_amount_due - float , Optional  
-16. final_payment_status - string , Optional
+11. missing_item_deduction_amount - float , Optional  
+12. refund_amount - float , Optional  
+13. extra_amount_due - float , Optional  
+14. final_payment_status - string , Optional
 
 I first thought booking dates and event dates were the same thing, but after thinking about real tent house operations, I realized items usually leave the shop before the actual function and return after the event ends.  
 
@@ -101,6 +107,10 @@ For example, if the remaining deposit amount is still positive after all deducti
 
 The final_payment_status field will help the system identify whether the booking is fully settled, refund pending, or payment still due.
 
+I realized amount_paid and remaining_balance may become inconsistent if payment records get updated separately but the totals on the booking record do not update correctly.  
+
+Because all payment transactions are already stored separately in the Payment Information section, the system can calculate total paid amount and remaining balance dynamically whenever needed instead of permanently storing duplicate values inside the booking record.
+
 ## D. Booking Item Information
 
 This section stores item-wise details connected to bookings.
@@ -108,15 +118,16 @@ This section stores item-wise details connected to bookings.
 1. booking_item_id - string , Required 
 2. booking_id - string , Required 
 3. item_id - string , Required 
-4. quantity_booked - integer , Required 
-5. price_per_day - float , Required 
-6. discount_percentage - float , Optional  
-7. final_price_per_day - float , Required  
-8. total_item_cost - float , Required 
-9. quantity_returned - integer , Optional  
-10. damaged_quantity - integer , Optional  
-11. missing_quantity - integer , Optional  
-12. item_return_status - string , Optional
+4. item_unit_id - string , Optional
+5. quantity_booked - integer , Required 
+6. price_per_day - float , Required 
+7. discount_percentage - float , Optional  
+8. final_price_per_day - float , Required  
+9. total_item_cost - float , Required 
+10. quantity_returned - integer , Optional  
+11. damaged_quantity - integer , Optional  
+12. missing_quantity - integer , Optional  
+13. item_return_status - string , Optional
 
 ### Why I separated this section:
 One booking contains many different rental items, so storing all items inside the main booking record may become complex so i save items of each booking separately
@@ -222,6 +233,13 @@ I decided to use multiple JSON files instead of one large file because different
 If everything is stored in one file, it may become difficult to search and update records during peak wedding season when many bookings happen together.
 
 The files will connect using IDs like customer_id, booking_id, and item_id.
+I also realized this JSON-file approach may become slower if Sharma Tent House grows to thousands of bookings every year.  
+
+For example, to check whether 200 chairs are available on a particular date, the program may need to read many booking records, booking item records, return records, and overlapping booking dates together before calculating the final available quantity.  
+
+With 5,000 or more bookings, repeatedly scanning large JSON files for every availability check may become slow and difficult to manage.  
+
+I think this approach is still reasonable for a small-to-medium local tent house business, but if the business grows much larger in the future, moving from JSON files to a proper database system may become necessary for faster searching and better performance.
 
 ---
 
@@ -247,71 +265,226 @@ The files will connect using IDs like customer_id, booking_id, and item_id.
   }
 ]
 ```
+## items.json
+
+```json
+[
+  {
+    "item_id": "I101",
+    "item_name": "Plastic Chair",
+    "category": "Seating",
+    "tracking_type": "bulk_quantity",
+    "total_quantity": 500,
+    "rental_price_per_day": 10,
+    "damage_charge": 200,
+    "late_fee_per_day": 2,
+    "item_condition": "Good"
+  },
+  {
+    "item_id": "I102",
+    "item_name": "LED Wall",
+    "category": "Lighting",
+    "tracking_type": "unique_item",
+    "total_quantity": 1,
+    "rental_price_per_day": 5000,
+    "damage_charge": 20000,
+    "late_fee_per_day": 500,
+    "item_condition": "Good"
+  }
+]
+```
+## bookings.json
+
+```json
+[
+  {
+    "booking_id": "B201",
+    "customer_id": "C101",
+    "event_name": "Wedding Function",
+    "event_location": "Talwandi, Kota",
+    "event_date": "2026-11-18",
+    "item_dispatch_date": "2026-11-17",
+    "expected_return_date": "2026-11-20",
+    "booking_status": "Active",
+    "deposit_amount": 10000,
+    "total_amount": 45000,
+    "amount_paid": 30000,
+    "remaining_balance": 15000,
+    "refund_amount": 0,
+    "extra_amount_due": 0,
+    "final_payment_status": "Pending"
+  }
+]
+```
+## booking_items.json
+
+```json
+[
+  {
+    "booking_item_id": "BI301",
+    "booking_id": "B201",
+    "item_id": "I101",
+    "item_unit_id": "LED-WALL-A"
+    "quantity_booked": 200,
+    "price_per_day": 10,
+    "discount_percentage": 20,
+    "final_price_per_day": 8,
+    "total_item_cost": 1600,
+    "quantity_returned": 198,
+    "damaged_quantity": 2,
+    "missing_quantity": 0,
+    "item_return_status": "Partially Returned"
+  },
+  {
+    "booking_item_id": "BI302",
+    "booking_id": "B201",
+    "item_id": "I102",
+    "quantity_booked": 1,
+    "price_per_day": 5000,
+    "discount_percentage": 0,
+    "final_price_per_day": 5000,
+    "total_item_cost": 5000,
+    "quantity_returned": 1,
+    "damaged_quantity": 0,
+    "missing_quantity": 0,
+    "item_return_status": "Returned"
+  }
+]
+```
+## payments.json
+
+```json
+[
+  {
+    "payment_id": "P401",
+    "booking_id": "B201",
+    "payment_date": "2026-11-10",
+    "payment_amount": 10000,
+    "payment_method": "UPI",
+    "payment_type": "Advance Payment",
+    "payment_notes": "Advance received during booking"
+  },
+  {
+    "payment_id": "P402",
+    "booking_id": "B201",
+    "payment_date": "2026-11-18",
+    "payment_amount": 20000,
+    "payment_method": "Cash",
+    "payment_type": "Delivery Payment",
+    "payment_notes": "Payment collected during delivery"
+  }
+]
+```
+These separate JSON files help the system keep customer details, bookings, items, returns, and payment history organized while still staying connected using IDs.  
+
+As the business grows to thousands of bookings per year, searching and updating records inside one large file may become slow and difficult to manage. Separating the data into multiple connected files will make the system easier to maintain and expand later.
 
 # 5. Operations
+# 5. Operations
 
-1. rakesh ji  adds  new customer
- → system stores customer details 
- → system shows confirmation message.  
+1. Rakesh ji adds a new customer  
+→ system stores customer details  
+→ system shows customer creation confirmation message.  
 
-2. rakesh ji  creates a new booking
- → system checks item availability 
- → system confirms booking if particular items are  available.  
+2. Rakesh ji creates a new booking  
+→ system checks item availability for requested dates  
+→ system confirms booking only if enough quantity is available.  
 
-3. User tries to book more chairs than available stock → system blocks booking 
-→ system shows enough quantity is not avaiable.  
+3. User tries to book more items than available stock  
+→ system checks overlapping bookings and reserved quantities  
+→ system blocks booking and shows unavailable quantity message.  
 
-4. User adds extra items to an existing booking
- → system recalculates total amount 
- → system shows updated bill.  
+4. User selects a future event date for booking  
+→ system compares active bookings, return events, and delayed returns  
+→ system shows available quantity for that specific date.  
 
-5. User removes items from booking
- → system reduce total amount 
- → system shoe message of updated amount, 
+5. User adds extra items to an existing booking  
+→ system recalculates booking amount  
+→ system shows updated bill and remaining balance.  
 
-6. User changes booking dates 
-→ system checks overlapping bookings 
-→ system show msg of booking is confirmed or not
+6. User removes items from booking  
+→ system updates reserved quantities and total amount  
+→ system shows updated booking summary.  
 
-7. User cancels a booking 
-→ system restores reserved inventory 
-→ system marks booking as cancelled.  
+7. User changes booking dates  
+→ system checks overlapping bookings again  
+→ system confirms whether booking can continue on new dates or not.  
 
-8. User checks item availability for a specific date
- → system compares active bookings 
-→ system shows available items.  
+8. User cancels a booking  
+→ system removes reserved quantities from active bookings  
+→ system restores item availability and marks booking as cancelled.  
 
-9. User give deposit payment 
-→ system updates payment details
- → system shows remaining balance.  
+9. User checks which items are currently available  
+→ system compares item stock with active bookings  
+→ system shows available quantities for requested dates.  
 
-10. User give final payment
- → system updates booking balance 
- → system marks payment completed.  
+10. User checks which items are currently out for events  
+→ system checks active delivery records  
+→ system shows dispatched items and their event locations.  
 
-11. User marks booking items as delivered 
-→ system updates delivery status
- → system stores delivery details.  
+11. User checks today’s deliveries and pickups  
+→ system searches delivery schedules and return events for today  
+→ system shows complete daily activity list.  
 
-12. User checks today’s collections
- → system shows pending returns
-→ system displays pickup schedules.  
+12. User checks pending pickups  
+→ system compares expected return dates with actual return records  
+→ system shows items that still need pickup.  
 
-13. User retrun item
- → system updates available stock 
- → system checks pending items.  
+13. User checks delayed returns  
+→ system calculates late return days from return events  
+→ system shows overdue items and customer details.  
 
-14. User return partail means half items → system keeps booking active → system shows missing quantity.  
+14. User records item delivery  
+→ system updates delivery status  
+→ system stores dispatch and delivery details.  
 
-15. User records damaged items → system calculates damage deduction → system updates damage records.  
+15. User records partial item return  
+→ system updates returned quantities item-wise  
+→ system keeps booking active until all items are returned.  
 
-16. User records missing items → system deducts amount from deposit → system updates refund amount.  
+16. User records complete item return  
+→ system verifies all booked quantities are returned  
+→ system marks booking return process completed.  
 
-17. User closes booking → system verifies all items are returned → system marks booking completed.  
+17. User records damaged items  
+→ system stores damaged quantities with item records  
+→ system calculates deduction amount from deposit or pending balance.  
 
-18. User searches customer history → system shows old bookings and payment history.  
+18. User records missing items  
+→ system calculates missing item charges  
+→ system updates final settlement amount.  
 
-19. User checks monthly damage report → system calculates total losses → system shows damage summary.  
+19. User gives advance payment  
+→ system stores payment transaction separately  
+→ system updates remaining booking balance.  
+
+20. User gives payment during delivery  
+→ system records payment date and payment method  
+→ system updates total paid amount.  
+
+21. User gives final payment after the event  
+→ system verifies remaining balance  
+→ system marks booking payment status as completed.  
+
+22. User checks full payment history of a booking  
+→ system loads all payment transactions connected with booking_id  
+→ system shows advance payments, delivery payments, and final payments separately.  
+
+23. User closes booking  
+→ system verifies all items are returned, payments are settled, and deductions are completed  
+→ system marks booking as fully closed.  
+
+24. User searches customer history  
+→ system loads old bookings, payment records, damaged item history, and pending balances  
+→ system shows complete customer history.  
+
+25. User checks monthly damage and loss report  
+→ system calculates damaged and missing item totals across all bookings  
+→ system shows monthly loss summary.  
+
+26. User checks which items are rarely booked or sitting idle  
+→ system compares booking frequency of all items  
+→ system shows items with very low usage so Rakesh ji can promote them more.
 
 ---
 
