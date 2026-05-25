@@ -94,6 +94,18 @@ The system should also be able to calculate:
 - refund situations
 - pending payment situations
 
+I do not want to build all these features together in one large step, so I plan to divide this phase into smaller working parts.  
+
+First, I will add customer management and connect customers with bookings because this is the smallest extension that still keeps the system properly demoable.  
+
+After that, I will add booking item records and multiple item categories so the program can handle realistic tent house bookings with different inventory types.  
+
+Once booking flow becomes stable, I will add payment tracking and discount handling because payments depend on booking calculations already working correctly.  
+
+After payments, I will add delivery tracking, return tracking, damaged items, and missing item handling because these features depend on bookings and payments already existing properly.  
+
+I think building Phase 3 in this sequence will help me test each business feature separately instead of debugging everything together at the end.
+
 At the end of this phase, the system should behave much closer to a real tent house management system used by Rakesh ji and Ankit.
 
 ---
