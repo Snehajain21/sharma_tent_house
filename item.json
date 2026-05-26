@@ -1,7 +1,7 @@
 {
     "item_id": "I101",
     "item_name": "Plastic Chair",
-    "total_quantity": 100,
-    "rental_price": 10,
+    "total_quantity": 600,
+    "rental_price": 20,
     "tracking_type": "bulk_quantity"
 }
