@@ -5,8 +5,7 @@ from helpers import (
 )
 
 from storage import (
-    save_items,
-    save_history
+    save_items
 )
 
 
@@ -35,20 +34,60 @@ def view_item_details(item):
     print("Rental Price:",
           item["rental_price"])
 
-    print("Tracking Type:",
-          item["tracking_type"])
-
     print("Last Updated:",
           item["last_updated"])
 
-    # LOW STOCK WARNING
-    if item["total_quantity"] < 5:
 
-        print("Warning: Low stock.")
+# ADD NEW ITEM
+def add_new_item(items):
+
+    item_name = input(
+        "Enter new item name: "
+    ).strip()
+
+    total_quantity = read_positive_int(
+        "Enter item quantity: "
+    )
+
+    rental_price = read_positive_int(
+        "Enter rental price: "
+    )
+
+    # GENERATE ITEM ID
+    item_id = "I" + str(100 + len(items) + 1)
+
+    new_item = {
+
+        "item_id": item_id,
+
+        "item_name": item_name,
+
+        "total_quantity": total_quantity,
+
+        "rental_price": rental_price,
+
+        "last_updated": "Not updated yet"
+    }
+
+    items.append(new_item)
+
+    save_items(items)
+
+    print("New item added successfully.")
+
+
+# DELETE ITEM
+def delete_item(item, items):
+
+    items.remove(item)
+
+    save_items(items)
+
+    print("Item deleted successfully.")
 
 
 # ADD ITEM QUANTITY
-def add_item_quantity(item, items, history):
+def add_item_quantity(item, items):
 
     quantity = read_positive_int(
         "Enter quantity to add: "
@@ -56,22 +95,15 @@ def add_item_quantity(item, items, history):
 
     item["total_quantity"] += quantity
 
-    # UPDATE LAST UPDATED
     item["last_updated"] = get_current_time()
 
     save_items(items)
-
-    history.append(
-        f"[{get_current_time()}] Added {quantity} chairs"
-    )
-
-    save_history(history)
 
     print("Quantity added successfully.")
 
 
 # REMOVE ITEM QUANTITY
-def remove_item_quantity(item, items, history):
+def remove_item_quantity(item, items):
 
     quantity = read_positive_int(
         "Enter quantity to remove: "
@@ -84,22 +116,15 @@ def remove_item_quantity(item, items, history):
 
     item["total_quantity"] -= quantity
 
-    # UPDATE LAST UPDATED
     item["last_updated"] = get_current_time()
 
     save_items(items)
-
-    history.append(
-        f"[{get_current_time()}] Removed {quantity} chairs"
-    )
-
-    save_history(history)
 
     print("Quantity removed successfully.")
 
 
 # UPDATE ITEM NAME
-def update_item_name(item, items, history):
+def update_item_name(item, items):
 
     new_name = input(
         "Enter new item name: "
@@ -110,59 +135,26 @@ def update_item_name(item, items, history):
         print("Item name cannot be empty.")
         return
 
-    old_name = item["item_name"]
-
     item["item_name"] = new_name
 
-    # UPDATE LAST UPDATED
     item["last_updated"] = get_current_time()
 
     save_items(items)
-
-    history.append(
-        f"[{get_current_time()}] Updated item name from {old_name} to {new_name}"
-    )
-
-    save_history(history)
 
     print("Item name updated successfully.")
 
 
 # UPDATE RENTAL PRICE
-def update_rental_price(item, items, history):
+def update_rental_price(item, items):
 
     new_price = read_positive_int(
         "Enter new rental price: "
     )
 
-    old_price = item["rental_price"]
-
     item["rental_price"] = new_price
 
-    # UPDATE LAST UPDATED
     item["last_updated"] = get_current_time()
 
     save_items(items)
 
-    history.append(
-        f"[{get_current_time()}] Updated rental price from {old_price} to {new_price}"
-    )
-
-    save_history(history)
-
     print("Rental price updated successfully.")
-
-
-# VIEW HISTORY
-def view_history(history):
-
-    if len(history) == 0:
-
-        print("No history available.")
-        return
-
-    print("\n========== INVENTORY HISTORY ==========")
-
-    for record in history:
-
-        print(record)
