@@ -3,8 +3,9 @@ from storage import (
 )
 
 from helpers import (
-    find_item_by_name,
-    show_available_items
+    show_available_items,
+    find_matching_items,
+    read_positive_int
 )
 
 from item import (
@@ -59,22 +60,58 @@ def main():
         # OPERATIONS REQUIRING ITEM SEARCH
         if choice in ["1", "3", "4", "5", "6", "7"]:
 
-            # SHOW AVAILABLE ITEMS
+            # SHOW ITEMS
             show_available_items(items)
 
             item_name = input(
                 "\nEnter item name: "
             ).strip()
 
-            item = find_item_by_name(
+            matching_items = find_matching_items(
                 items,
                 item_name
             )
 
-            if item is None:
+            # NO MATCH FOUND
+            if len(matching_items) == 0:
 
                 print("Item not found.")
                 continue
+
+            # SINGLE MATCH
+            elif len(matching_items) == 1:
+
+                item = matching_items[0]
+
+            # MULTIPLE MATCHES
+            else:
+
+                print("\nMultiple matching items found:")
+
+                for index, matched_item in enumerate(
+                    matching_items,
+                    start=1
+                ):
+
+                    print(
+                        f"{index}. {matched_item['item_name']}"
+                    )
+
+                selected_number = read_positive_int(
+                    "Select item number: "
+                )
+
+                if (
+                    selected_number
+                    > len(matching_items)
+                ):
+
+                    print("Invalid selection.")
+                    continue
+
+                item = matching_items[
+                    selected_number - 1
+                ]
 
         # VIEW ITEM
         if choice == "1":

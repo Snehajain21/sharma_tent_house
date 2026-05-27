@@ -53,8 +53,20 @@ def add_new_item(items):
         "Enter rental price: "
     )
 
-    # GENERATE ITEM ID
-    item_id = "I" + str(100 + len(items) + 1)
+    # FIND NEXT UNIQUE ITEM ID
+    max_id = 100
+
+    for item in items:
+
+        current_id = int(
+            item["item_id"][1:]
+        )
+
+        if current_id > max_id:
+
+            max_id = current_id
+
+    item_id = "I" + str(max_id + 1)
 
     new_item = {
 
@@ -78,6 +90,15 @@ def add_new_item(items):
 
 # DELETE ITEM
 def delete_item(item, items):
+
+    confirmation = input(
+        f"Are you sure you want to delete '{item['item_name']}'? (yes/no): "
+    ).strip().lower()
+
+    if confirmation != "yes":
+
+        print("Delete operation cancelled.")
+        return
 
     items.remove(item)
 

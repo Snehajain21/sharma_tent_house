@@ -35,8 +35,10 @@ def show_available_items(items):
         print("-", item["item_name"])
 
 
-# FIND ITEM BY NAME
-def find_item_by_name(items, item_name):
+# FIND MATCHING ITEMS
+def find_matching_items(items, item_name):
+
+    matching_items = []
 
     item_name = item_name.lower()
 
@@ -48,6 +50,6 @@ def find_item_by_name(items, item_name):
             in item["item_name"].lower()
         ):
 
-            return item
+            matching_items.append(item)
 
-    return None
+    return matching_items
