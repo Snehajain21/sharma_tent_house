@@ -3,9 +3,7 @@ from storage import (
 )
 
 from helpers import (
-    show_available_items,
-    find_matching_items,
-    read_positive_int
+    search_item
 )
 
 from item import (
@@ -15,8 +13,81 @@ from item import (
     add_item_quantity,
     remove_item_quantity,
     update_item_name,
-    update_rental_price
+    update_rental_price,
+    export_items_to_excel
 )
+
+
+# UPDATE EXISTING ITEM MENU
+def update_existing_item(item, items):
+
+    while True:
+
+        print(
+            f"\n========== Update {item['item_name']} =========="
+        )
+
+        print("1. View Item Details")
+
+        print("2. Add Item Quantity")
+
+        print("3. Remove Item Quantity")
+
+        print("4. Update Item Name")
+
+        print("5. Update Rental Price")
+
+        print("6. Back to main Menu")
+
+        choice = input(
+            "\nEnter your choice: "
+        )
+
+        # VIEW DETAILS
+        if choice == "1":
+
+            view_item_details(item)
+
+        # ADD QUANTITY
+        elif choice == "2":
+
+            add_item_quantity(
+                item,
+                items
+            )
+
+        # REMOVE QUANTITY
+        elif choice == "3":
+
+            remove_item_quantity(
+                item,
+                items
+            )
+
+        # UPDATE NAME
+        elif choice == "4":
+
+            update_item_name(
+                item,
+                items
+            )
+
+        # UPDATE RENTAL PRICE
+        elif choice == "5":
+
+            update_rental_price(
+                item,
+                items
+            )
+
+        # BACK
+        elif choice == "6":
+
+            break
+
+        else:
+
+            print("Invalid choice.")
 
 
 # MAIN PROGRAM
@@ -30,136 +101,56 @@ def main():
             "\n========== Sharma Tent House Inventory =========="
         )
 
-        print("1. View Item Details")
+        print("1. Add New Item")
 
-        print("2. Add New Item")
+        print("2. Update Existing Item")
 
         print("3. Delete Item")
 
-        print("4. Add Item Quantity")
+        print("4. View All Items")
 
-        print("5. Remove Item Quantity")
-
-        print("6. Update Item Name")
-
-        print("7. Update Rental Price")
-
-        print("8. Exit")
+        print("5. Exit")
 
         choice = input(
             "\nEnter your choice: "
         )
 
         # ADD NEW ITEM
-        if choice == "2":
+        if choice == "1":
 
             add_new_item(items)
 
-            continue
+        # UPDATE EXISTING ITEM
+        elif choice == "2":
 
-        # OPERATIONS REQUIRING ITEM SEARCH
-        if choice in ["1", "3", "4", "5", "6", "7"]:
+            item = search_item(items)
 
-            # SHOW ITEMS
-            show_available_items(items)
+            if item is not None:
 
-            item_name = input(
-                "\nEnter item name: "
-            ).strip()
-
-            matching_items = find_matching_items(
-                items,
-                item_name
-            )
-
-            # NO MATCH FOUND
-            if len(matching_items) == 0:
-
-                print("Item not found.")
-                continue
-
-            # SINGLE MATCH
-            elif len(matching_items) == 1:
-
-                item = matching_items[0]
-
-            # MULTIPLE MATCHES
-            else:
-
-                print("\nMultiple matching items found:")
-
-                for index, matched_item in enumerate(
-                    matching_items,
-                    start=1
-                ):
-
-                    print(
-                        f"{index}. {matched_item['item_name']}"
-                    )
-
-                selected_number = read_positive_int(
-                    "Select item number: "
+                update_existing_item(
+                    item,
+                    items
                 )
-
-                if (
-                    selected_number
-                    > len(matching_items)
-                ):
-
-                    print("Invalid selection.")
-                    continue
-
-                item = matching_items[
-                    selected_number - 1
-                ]
-
-        # VIEW ITEM
-        if choice == "1":
-
-            view_item_details(item)
 
         # DELETE ITEM
         elif choice == "3":
 
-            delete_item(
-                item,
-                items
-            )
+            item = search_item(items)
 
-        # ADD QUANTITY
+            if item is not None:
+
+                delete_item(
+                    item,
+                    items
+                )
+
+        # VIEW ALL ITEMS
         elif choice == "4":
 
-            add_item_quantity(
-                item,
-                items
-            )
-
-        # REMOVE QUANTITY
-        elif choice == "5":
-
-            remove_item_quantity(
-                item,
-                items
-            )
-
-        # UPDATE NAME
-        elif choice == "6":
-
-            update_item_name(
-                item,
-                items
-            )
-
-        # UPDATE PRICE
-        elif choice == "7":
-
-            update_rental_price(
-                item,
-                items
-            )
+            export_items_to_excel(items)
 
         # EXIT
-        elif choice == "8":
+        elif choice == "5":
 
             print("Exiting program...")
             break
