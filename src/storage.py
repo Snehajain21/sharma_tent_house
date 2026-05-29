@@ -2,6 +2,7 @@ import json
 import os
 
 FILE_NAME = "items.json"
+BOOKINGS_FILE = "bookings.json"
 
 
 # LOAD ITEMS
@@ -65,3 +66,33 @@ def save_items(items):
 
         # SAVE ITEMS INTO JSON FILE
         json.dump(items, file, indent=4)
+
+
+# LOAD BOOKINGS
+def load_bookings():
+
+    if os.path.exists(BOOKINGS_FILE):
+
+        with open(
+            BOOKINGS_FILE,
+            "r"
+        ) as file:
+
+            return json.load(file)
+
+    return []
+
+
+# SAVE BOOKINGS
+def save_bookings(bookings):
+
+    with open(
+        BOOKINGS_FILE,
+        "w"
+    ) as file:
+
+        json.dump(
+            bookings,
+            file,
+            indent=4
+        )
