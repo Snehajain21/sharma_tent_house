@@ -6,6 +6,13 @@ from helpers import (
     search_item
 )
 
+from booking import (
+    create_booking,
+    view_all_bookings,
+    update_booking,
+    delete_booking
+)
+
 from item import (
     view_item_details,
     add_new_item,
@@ -16,6 +23,7 @@ from item import (
     update_rental_price,
     export_items_to_excel
 )
+
 
 
 # UPDATE EXISTING ITEM MENU
@@ -37,7 +45,7 @@ def update_existing_item(item, items):
 
         print("5. Update Rental Price")
 
-        print("6. Back to main Menu")
+        print("6. Back to Main Menu")
 
         choice = input(
             "\nEnter your choice: "
@@ -108,8 +116,16 @@ def main():
         print("3. Delete Item")
 
         print("4. View All Items")
+    
+        print("5. Create Booking")
 
-        print("5. Exit")
+        print("6. View All Bookings")
+
+        print("7. Update Booking")
+
+        print("8. Delete Booking")
+
+        print("9. Exit")
 
         choice = input(
             "\nEnter your choice: "
@@ -149,10 +165,28 @@ def main():
 
             export_items_to_excel(items)
 
-        # EXIT
+        # CREATE BOOKING
         elif choice == "5":
 
+            create_booking(items)
+
+        # VIEW ALL BOOKINGS
+        elif choice == "6":
+
+            view_all_bookings()
+        # UPDATE BOOKING
+        elif choice == "7":
+
+            update_booking()
+
+        elif choice == "8":
+
+            delete_booking()
+        # EXIT
+        elif choice == "9":
+
             print("Exiting program...")
+
             break
 
         else:

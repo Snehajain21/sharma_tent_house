@@ -1,0 +1,44 @@
+[
+    {
+        "item_id": "I102",
+        "item_name": "Table",
+        "total_quantity": 20,
+        "rental_price": 50,
+        "last_updated": "Not updated yet"
+    },
+    {
+        "item_id": "I103",
+        "item_name": "Gas Burner",
+        "total_quantity": 5,
+        "rental_price": 100,
+        "last_updated": "Not updated yet"
+    },
+    {
+        "item_id": "I104",
+        "item_name": "sofa",
+        "total_quantity": 100,
+        "rental_price": 100,
+        "last_updated": "Not updated yet"
+    },
+    {
+        "item_id": "I106",
+        "item_name": "folding chair",
+        "total_quantity": 100,
+        "rental_price": 200,
+        "last_updated": "Not updated yet"
+    },
+    {
+        "item_id": "I107",
+        "item_name": "plastic chair",
+        "total_quantity": 100,
+        "rental_price": 20,
+        "last_updated": "Not updated yet"
+    },
+    {
+        "item_id": "I108",
+        "item_name": "LED",
+        "total_quantity": 50,
+        "rental_price": 10,
+        "last_updated": "Not updated yet"
+    }
+]

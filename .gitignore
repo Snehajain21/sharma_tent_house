@@ -1,4 +1,13 @@
-items.json
+# Excel exports
 inventory.xlsx
+bookings.xlsx
+
+# Runtime booking data
+bookings.json
+
+# Python cache
 __pycache__/
+*.pyc
+
+# Virtual environment
 venv/
